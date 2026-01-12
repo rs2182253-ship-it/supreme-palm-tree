@@ -1,0 +1,59 @@
+name: Build Jarvis APK - Ultimate Bypass
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Force Anonymous & Clean Install
+        run: |
+          # 1. Sab kuch saaf karke anonymous config banana
+          rm -rf node_modules package-lock.json .npmrc
+          echo "registry=https://registry.npmjs.org/" > .npmrc_fresh
+          
+          # 2. Force installation using the fresh local config
+          export NPM_CONFIG_USERCONFIG=$PWD/.npmrc_fresh
+          
+          # 3. Direct installation without any authentication
+          npm install --no-package-lock --no-audit --no-fund
+          npm install @capacitor/core@6.0.0 @capacitor/android@6.0.0 @capacitor/cli@6.0.0 --save
+          # Biometric 404 bypass logic
+          npm install @capacitor-community/native-biometric@6.0.0 --save --legacy-peer-deps
+
+      - name: Sync Web Assets
+        run: |
+          mkdir -p www
+          cp index.html www/
+
+      - name: Capacitor Sync
+        run: |
+          npx cap sync android
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Build Android APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Jarvis-STI-L16-Success
+          path: android/app/build/outputs/apk/debug/app-debug.apk
