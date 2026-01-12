@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jarvis L16 - STI Master</title>
+    <style>
+        :root { --neon: #00f2ff; --bg: #010409; --master: #f43f5e; --sage: #a855f7; --hud: rgba(0, 242, 255, 0.1); }
+        body, html { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        
+        /* Sonic Visualizer Layer */
+        #wave-canvas { position: absolute; bottom: 0; width: 100%; height: 180px; opacity: 0.8; pointer-events: none; filter: drop-shadow(0 0 10px var(--neon)); }
+        
+        /* Tactical HUD */
+        .hud-v16 { position: absolute; width: 96%; height: 96%; border: 1px solid var(--hud); pointer-events: none; display: flex; flex-direction: column; justify-content: space-between; padding: 25px; box-sizing: border-box; }
+        
+        /* Arc Reactor Engine */
+        .arc-reactor { position: relative; width: 320px; height: 320px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .ring { position: absolute; border-radius: 50%; border: 2px solid var(--neon); transition: 0.6s; }
+        .r1 { width: 100%; height: 100%; border-style: double; animation: rot 22s linear infinite; }
+        .core { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(circle, var(--neon) 10%, transparent 85%); box-shadow: 0 0 70px var(--neon); z-index: 5; transition: 0.5s; }
+        
+        /* Reactor States */
+        .auth-master .core { background: radial-gradient(circle, var(--master) 10%, transparent 85%); box-shadow: 0 0 110px var(--master); transform: scale(1.05); }
+        .thinking .core { background: radial-gradient(circle, var(--sage) 10%, transparent 85%); box-shadow: 0 0 110px var(--sage); }
+
+        @keyframes rot { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        #log-line { font-size: 1.1rem; color: var(--neon); margin-top: 15px; letter-spacing: 2px; font-weight: 900; text-transform: uppercase; text-align: center; text-shadow: 0 0 5px var(--neon); }
+        
+        /* Auth Modals */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(1, 4, 9, 0.98); z-index: 100; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        input { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 15px; width: 80%; text-align: center; margin: 20px 0; outline: none; }
+        .btn { background: var(--neon); color: black; border: none; padding: 14px 45px; font-weight: bold; cursor: pointer; border-radius: 5px; text-transform: uppercase; }
+        .sys-chip { padding: 5px 15px; border: 1px solid var(--neon); font-size: 0.7rem; font-family: monospace; letter-spacing: 1px; }
+    </style>
+</head>
+<body onclick="bootJarvis()">
+
+    <div id="auth-modal" class="modal">
+        <h2 style="color: var(--neon); letter-spacing: 5px;">STI SECURITY GATEWAY</h2>
+        <p style="font-size: 0.9rem; opacity: 0.7;" id="auth-msg">MASTER RAVI, VERIFY IDENTITY TO UNLOCK SYSTEM</p>
+        <div id="key-area" style="display:none; width: 100%;">
+            <input type="password" id="api-key-input" placeholder="Paste Gemini API Key">
+            <button class="btn" onclick="saveVault()">Initialize STI OS</button>
+        </div>
+        <button id="bio-btn" class="btn" onclick="triggerBiometric()">Start Identity Scan</button>
+    </div>
+
+    <canvas id="wave-canvas"></canvas>
+
+    <div class="hud-v16">
+        <div style="display: flex; justify-content: space-between;">
+            <span class="sys-chip">MIC: SONIC_SHARP</span>
+            <span class="sys-chip">TARGET: STI_FINANCIALS</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--neon);">
+            <span id="bat-val">BAT: --%</span>
+            <span>OS: JARVIS_V1.8.8 // MASTER: RAVI</span>
+            <span id="time-val">00:00:00</span>
+        </div>
+    </div>
+
+    <div id="reactor" class="arc-reactor">
+        <div class="ring r1"></div><div class="core"></div>
+    </div>
+
+    <div id="panel" style="position: absolute; bottom: 22%; width: 100%; text-align: center;">
+        <div id="log-line">Identity Check Required...</div>
+    </div>
+
+    <script>
+        let API_KEY = localStorage.getItem('JARVIS_VAULT_KEY') || "";
+        const MASTER_CODE = "jarvis aankhe kholo";
+        const log = document.getElementById('log-line');
+        const ui = document.getElementById('reactor');
+        const canvas = document.getElementById('wave-canvas');
+        const ctx = canvas.getContext('2d');
+        let isMaster = false, isAwake = false, isBioDone = false;
+
+        window.onload = () => { document.getElementById('auth-modal').style.display = 'flex'; };
+
+        function triggerBiometric() {
+            speak("Verifying identity for Ravi Surya-vanshi.");
+            setTimeout(() => { 
+                isBioDone = true;
+                if(!API_KEY) {
+                    document.getElementById('auth-msg').innerText = "ID MATCHED. INITIALIZE VAULT.";
+                    document.getElementById('bio-btn').style.display = 'none';
+                    document.getElementById('key-area').style.display = 'block';
+                } else { document.getElementById('auth-modal').style.display = 'none'; bootJarvis(); }
+            }, 1500);
+        }
+
+        function saveVault() {
+            const key = document.getElementById('api-key-input').value;
+            if(key.length > 25) { localStorage.setItem('JARVIS_VAULT_KEY', key); API_KEY = key; document.getElementById('auth-modal').style.display = 'none'; bootJarvis(); }
+        }
+
+        // Memory Vault formula
+        // $Memory = \{Data \mid (T_{now} - T_{data}) < 30 \text{ days}\}$
+        function getVault() {
+            let m = JSON.parse(localStorage.getItem('jarvis_v25_vault')) || [];
+            m = m.filter(i => (Date.now() - i.time) < 2592000000); 
+            localStorage.setItem('jarvis_v25_vault', JSON.stringify(m));
+            return m;
+        }
+
+        function saveLog(role, text) {
+            let m = JSON.parse(localStorage.getItem('jarvis_v25_vault')) || [];
+            m.push({ role, parts: [{ text }], time: Date.now() });
+            localStorage.setItem('jarvis_v25_vault', JSON.stringify(m));
+        }
+
+        function speak(text) {
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'hi-IN';
+            u.onstart = () => ui.classList.add('thinking');
+            u.onend = () => ui.classList.remove('thinking');
+            window.speechSynthesis.speak(u);
+            saveLog('model', text);
+        }
+
+        const Recognition = window.SpeechRecognition || window.webkitRecognition;
+        const recog = new Recognition();
+        recog.lang = 'hi-IN';
+        recog.continuous = true;
+
+        async function bootJarvis() {
+            if(!isBioDone) return;
+            renderWave();
+            try {
+                await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+                recog.start();
+                log.innerText = "STI Neural Link Online.";
+                speak("All systems online, Master Ravi. Focus is STI financials.");
+            } catch (e) { log.innerText = "Mic Error."; }
+        }
+
+        function renderWave() {
+            requestAnimationFrame(renderWave);
+            canvas.width = window.innerWidth;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.strokeStyle = isAwake ? '#a855f7' : '#00f2ff';
+            ctx.lineWidth = 3;
+            for(let i=0; i<canvas.width; i+=3) {
+                const amp = isAwake ? 65 : 10;
+                const y = 90 + Math.sin(i * 0.03 + Date.now() * 0.015) * (amp * Math.random());
+                ctx.lineTo(i, y);
+            }
+            ctx.stroke();
+        }
+
+        recog.onresult = async (event) => {
+            const text = event.results[event.results.length-1][0].transcript.toLowerCase().trim();
+            log.innerText = ">> " + text;
+            if(text.includes(MASTER_CODE)) { isMaster = true; isAwake = true; ui.classList.add('auth-master'); speak("Vision active, Sir."); return; }
+            if(isAwake) {
+                saveLog('user', text);
+                try {
+                    const h = getVault().map(({role, parts}) => ({role, parts}));
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${API_KEY}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: h, system_instruction: { parts: [{ text: "You are Jarvis L16. Master is Ravi. Focused on STI research, Chess, and logical riddles." }] } })
+                    });
+                    const d = await res.json();
+                    const r = d.candidates[0].content.parts[0].text;
+                    log.innerText = r; speak(r);
+                } catch (e) { log.innerText = "VAULT_ERROR"; }
+            }
+        };
+
+        recog.onend = () => recog.start();
+        setInterval(() => { document.getElementById('time-val').innerText = new Date().toLocaleTimeString(); }, 1000);
+        navigator.getBattery().then(b => { document.getElementById('bat-val').innerText = `BAT: ${Math.round(b.level * 100)}%`; });
+    </script>
+</body>
+</html>

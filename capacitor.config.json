@@ -1,0 +1,14 @@
+{
+  "appId": "com.jarvis.sti.master.ravi",
+  "appName": "Jarvis STI Pro",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "NativeBiometric": {
+      "biometricAuth": true
+    }
+  }
+}
